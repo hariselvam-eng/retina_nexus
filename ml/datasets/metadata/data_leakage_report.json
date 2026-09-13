@@ -1,0 +1,10 @@
+{
+  "cross_split_duplicate_groups": [],
+  "cross_split_patient_groups": [],
+  "dataset": "aptos2019",
+  "limitations": [
+    "No patient-level identifier was found; only image/duplicate grouping was enforced."
+  ],
+  "patient_level_guarantee": false,
+  "status": "pass"
+}

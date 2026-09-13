@@ -1,0 +1,102 @@
+{
+  "registry_version": "1.0.0",
+  "readiness_metric": {
+    "name": "Dataset Readiness Score",
+    "type": "engineering_readiness",
+    "description": "A prototype data-engineering signal based on readable files, duplicates, labels, class balance, split integrity, and metadata completeness. It is not a clinical validation metric and must not be presented as one.",
+    "weights": {
+      "readable_files": 0.25,
+      "duplicate_free": 0.15,
+      "label_completeness": 0.20,
+      "class_balance": 0.15,
+      "split_integrity": 0.15,
+      "metadata_completeness": 0.10
+    }
+  },
+  "datasets": [
+    {
+      "slug": "aptos2019",
+      "name": "APTOS 2019 Blindness Detection",
+      "purpose": "Primary diabetic retinopathy classification dataset.",
+      "status": "not_acquired",
+      "raw_path": "ml/datasets/raw/aptos2019",
+      "expected_image_extensions": [".jpg", ".jpeg", ".png"],
+      "annotation_globs": ["**/train.csv"],
+      "image_field_candidates": ["id_code", "id", "image", "image_id", "filename", "file"],
+      "label_field_candidates": ["diagnosis", "label", "grade", "class"],
+      "group_field_candidates": ["patient_id", "patient", "subject_id"],
+      "label_values": ["0", "1", "2", "3", "4"],
+      "kaggle_competition": "aptos2019-blindness-detection",
+      "manual_setup": "Place the authorized competition files under ml/datasets/raw/aptos2019/; keep train.csv beside the image directory.",
+      "limitations": ["The official competition metadata does not guarantee a patient identifier field; split generation will report this limitation when absent."]
+    },
+    {
+      "slug": "idrid",
+      "name": "IDRiD",
+      "purpose": "Retinal lesion analysis and clinical evidence.",
+      "status": "not_acquired",
+      "raw_path": "ml/datasets/raw/idrid",
+      "expected_image_extensions": [".jpg", ".jpeg", ".png", ".tif", ".tiff"],
+      "annotation_globs": ["**/*.csv"],
+      "image_field_candidates": ["image", "image_id", "filename", "file", "name"],
+      "label_field_candidates": ["label", "grade", "class", "diagnosis"],
+      "group_field_candidates": ["patient_id", "patient", "subject_id"],
+      "kaggle_competition": null,
+      "manual_setup": "Obtain IDRiD under its source terms and place the original images and ground-truth folders under ml/datasets/raw/idrid/.",
+      "limitations": ["IDRiD supports multiple lesion annotation formats; generic label validation does not replace lesion-specific schema validation."]
+    },
+    {
+      "slug": "drive",
+      "name": "DRIVE",
+      "purpose": "Retinal blood-vessel segmentation.",
+      "status": "not_acquired",
+      "raw_path": "ml/datasets/raw/drive",
+      "expected_image_extensions": [".jpg", ".jpeg", ".png", ".tif", ".tiff"],
+      "annotation_globs": ["**/*mask*", "**/*manual*", "**/*1st*", "**/*2nd*"],
+      "image_field_candidates": ["image", "image_id", "filename", "file", "name"],
+      "label_field_candidates": [],
+      "group_field_candidates": ["patient_id", "patient", "subject_id"],
+      "label_values": [],
+      "kaggle_competition": null,
+      "manual_setup": "Obtain DRIVE under its source terms and place training/test images and vessel masks under ml/datasets/raw/drive/.",
+      "limitations": ["Segmentation mask validation is represented as file-pair and readability checks; pixel-level mask semantics need a DRIVE-specific adapter."]
+    },
+    {
+      "slug": "messidor",
+      "name": "Messidor / Messidor-2",
+      "purpose": "External validation and generalization testing.",
+      "status": "not_acquired",
+      "raw_path": "ml/datasets/raw/messidor",
+      "expected_image_extensions": [".jpg", ".jpeg", ".png", ".tif", ".tiff"],
+      "annotation_globs": ["**/*.csv", "**/*.xls", "**/*.xlsx"],
+      "image_field_candidates": ["image", "image_id", "filename", "file", "name"],
+      "label_field_candidates": ["label", "grade", "class", "diagnosis"],
+      "group_field_candidates": ["patient_id", "patient", "subject_id"],
+      "label_values": [],
+      "kaggle_competition": null,
+      "official_sources": {
+        "messidor": "https://www.adcis.net/en/third-party/messidor/",
+        "messidor2": "https://www.adcis.net/en/third-party/messidor2/"
+      },
+      "access_mode": "manual_form_required",
+      "license_summary": "Research and educational use only; copying, redistribution, and unauthorized commercial use are prohibited by the official source terms.",
+      "manual_setup": "Complete the ADCIS download form, obtain an authorized copy, and place the original images, labels or pairing spreadsheet, and source documentation under ml/datasets/raw/messidor/. Run scripts/acquire_messidor.py after placement.",
+      "supported_variants": {
+        "messidor": {
+          "documented_images": 1200,
+          "documented_image_format": "TIFF",
+          "documented_grade_values": [0, 1, 2, 3],
+          "label_status": "official per-subset medical-diagnosis spreadsheets"
+        },
+        "messidor2": {
+          "documented_images": 1748,
+          "documented_image_formats": ["PNG", "JPG"],
+          "documented_grade_values": [],
+          "label_status": "official release includes image pairing metadata but no DR ground-truth annotations"
+        }
+      },
+      "readiness_report": "ml/evaluation/messidor/phase4_readiness_report.json",
+      "limitations": ["Messidor/Messidor-2 access requires the official manual form and source terms.", "Messidor-2 official ground truth is absent; third-party labels require separate provenance, authorization, license, and grading review.", "The Messidor 0-3 scale cannot be treated as a five-class APTOS 0-4 scale because its grade 3 combines severe findings and neovascularization.", "The official documentation states that identifying patient information was discarded, so patient-level grouping is not available."]
+    }
+  ]
+}

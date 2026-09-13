@@ -1,0 +1,17 @@
+-r requirements.txt
+
+# Install this file only when training or serving a real classifier.
+# torchvision uses its official weight URLs/cache when --pretrained is enabled.
+torch==2.5.1
+torchvision==0.20.1
+timm==1.0.14
+scikit-learn==1.6.1
+pandas==2.2.3
+openpyxl==3.1.5
+xlrd==2.0.1
+tqdm==4.67.1
+kagglehub>=1.0.2,<2.0
+torchseg==0.0.1a1
+safetensors>=0.4.5
+huggingface_hub>=0.25.0
+scikit-image>=0.24.0
