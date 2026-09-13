@@ -10,19 +10,20 @@ export default function HeroVisual() {
     if (!video) return;
 
     try {
-      if (video.muted) {
+      if (soundOn) {
+        video.muted = true;
+        video.volume = 0;
+        setSoundOn(false);
+      } else {
         video.muted = false;
         video.volume = 1;
 
         await video.play();
 
         setSoundOn(true);
-      } else {
-        video.muted = true;
-        setSoundOn(false);
       }
     } catch (error) {
-      console.error("Unable to enable video sound:", error);
+      console.error("Video audio error:", error);
     }
   };
 
@@ -38,6 +39,7 @@ export default function HeroVisual() {
           muted
           loop
           playsInline
+          preload="auto"
         />
 
         <div className="hero-video-overlay" />
