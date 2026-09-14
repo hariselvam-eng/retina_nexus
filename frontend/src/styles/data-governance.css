@@ -1,0 +1,775 @@
+/* =========================================================
+   RETINA NEXUS — DATA GOVERNANCE
+   Premium glassmorphism UI
+   ========================================================= */
+
+.data-governance {
+  position: relative;
+  min-height: 100%;
+  isolation: isolate;
+}
+
+/* ---------------------------------------------------------
+   Ambient background
+   --------------------------------------------------------- */
+
+.data-governance::before {
+  content: '';
+  position: fixed;
+  width: 360px;
+  height: 360px;
+  top: 90px;
+  right: -120px;
+  border-radius: 50%;
+  background: rgba(45, 212, 191, 0.10);
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.data-governance::after {
+  content: '';
+  position: fixed;
+  width: 300px;
+  height: 300px;
+  left: 22%;
+  bottom: 5%;
+  border-radius: 50%;
+  background: rgba(34, 211, 238, 0.07);
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ---------------------------------------------------------
+   Page entrance
+   --------------------------------------------------------- */
+
+.dg-enter {
+  animation: dgFadeUp 0.55s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.dg-enter-delay-1 {
+  animation-delay: 80ms;
+}
+
+.dg-enter-delay-2 {
+  animation-delay: 160ms;
+}
+
+.dg-enter-delay-3 {
+  animation-delay: 240ms;
+}
+
+.dg-enter-delay-4 {
+  animation-delay: 320ms;
+}
+
+@keyframes dgFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------------------------------------------------------
+   Page heading
+   --------------------------------------------------------- */
+
+.dg-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+@media (min-width: 1024px) {
+  .dg-header {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+}
+
+.dg-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.60);
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04);
+}
+
+.dg-title {
+  margin-top: 10px;
+  background: linear-gradient(
+    100deg,
+    #020617 0%,
+    #1e293b 48%,
+    #0f766e 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 36px;
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+}
+
+@media (max-width: 640px) {
+  .dg-title {
+    font-size: 30px;
+  }
+}
+
+.dg-description {
+  max-width: 680px;
+  margin-top: 10px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* ---------------------------------------------------------
+   Glass button
+   --------------------------------------------------------- */
+
+.dg-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.68);
+  color: #334155;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow:
+    0 10px 35px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition:
+    transform 0.3s ease,
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.dg-refresh:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 18px 45px rgba(15, 23, 42, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.dg-refresh:active {
+  transform: translateY(0);
+}
+
+.dg-refresh:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ---------------------------------------------------------
+   Governance banner
+   --------------------------------------------------------- */
+
+.dg-notice {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(153, 246, 228, 0.55);
+  border-radius: 24px;
+  padding: 17px 19px;
+  background:
+    linear-gradient(
+      110deg,
+      rgba(240, 253, 250, 0.92),
+      rgba(255, 255, 255, 0.68),
+      rgba(236, 254, 255, 0.82)
+    );
+  box-shadow: 0 18px 55px rgba(20, 184, 166, 0.06);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.dg-notice::after {
+  content: '';
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  right: -70px;
+  top: -90px;
+  border-radius: 50%;
+  background: rgba(45, 212, 191, 0.12);
+  filter: blur(25px);
+}
+
+.dg-notice-content {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  z-index: 1;
+}
+
+.dg-notice-icon {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(20, 184, 166, 0.10);
+  color: #0f766e;
+}
+
+.dg-notice-title {
+  color: #134e4a;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.dg-notice-text {
+  margin-top: 4px;
+  color: rgba(19, 78, 74, 0.78);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+/* ---------------------------------------------------------
+   Dataset inventory
+   --------------------------------------------------------- */
+
+.dg-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.dg-section-kicker {
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.dg-section-title {
+  margin-top: 3px;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.dg-count {
+  padding: 7px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.60);
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+/* ---------------------------------------------------------
+   Dataset card
+   --------------------------------------------------------- */
+
+.dg-dataset-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 24px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow:
+    0 15px 45px rgba(15, 23, 42, 0.055),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  transition:
+    transform 0.45s cubic-bezier(.22, 1, .36, 1),
+    box-shadow 0.45s ease,
+    background 0.45s ease;
+  animation: dgCardIn 0.55s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.dg-dataset-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.80);
+  box-shadow:
+    0 25px 65px rgba(15, 23, 42, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.dg-dataset-card::before {
+  content: '';
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  right: -50px;
+  top: -50px;
+  border-radius: 50%;
+  background: rgba(45, 212, 191, 0.08);
+  filter: blur(20px);
+  transition: transform 0.7s ease;
+}
+
+.dg-dataset-card:hover::before {
+  transform: scale(1.8);
+}
+
+@keyframes dgCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dg-card-top {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  z-index: 1;
+}
+
+.dg-database-icon {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  background: linear-gradient(
+    135deg,
+    rgba(240, 253, 250, 1),
+    rgba(236, 254, 255, 0.9)
+  );
+  color: #0f766e;
+  box-shadow: 0 7px 20px rgba(20, 184, 166, 0.08);
+}
+
+.dg-dataset-name {
+  position: relative;
+  margin-top: 19px;
+  min-height: 40px;
+  color: #0f172a;
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 900;
+  z-index: 1;
+}
+
+.dg-dataset-purpose {
+  position: relative;
+  min-height: 34px;
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.5;
+  z-index: 1;
+}
+
+.dg-stat-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(226, 232, 240, 0.75);
+  z-index: 1;
+}
+
+.dg-stat-label {
+  color: #94a3b8;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dg-stat-value {
+  margin-top: 3px;
+  overflow: hidden;
+  color: #1e293b;
+  font-size: 11px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------
+   Lower layout
+   --------------------------------------------------------- */
+
+.dg-lower-grid {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 1024px) {
+  .dg-lower-grid {
+    grid-template-columns: minmax(0, 1fr) 350px;
+  }
+}
+
+/* ---------------------------------------------------------
+   Glass analytics panel
+   --------------------------------------------------------- */
+
+.dg-glass-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 26px;
+  padding: 22px;
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow:
+    0 20px 60px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+}
+
+.dg-glass-panel::after {
+  content: '';
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  top: -100px;
+  right: -70px;
+  border-radius: 50%;
+  background: rgba(45, 212, 191, 0.08);
+  filter: blur(30px);
+  pointer-events: none;
+  transition: transform 0.7s ease;
+}
+
+.dg-glass-panel:hover::after {
+  transform: scale(1.5);
+}
+
+.dg-panel-heading {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1;
+}
+
+.dg-panel-icon {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(20, 184, 166, 0.09);
+  color: #0f766e;
+}
+
+.dg-panel-kicker {
+  color: #0f766e;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.dg-panel-title {
+  margin-top: 3px;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.dg-panel-subtitle {
+  margin-top: 3px;
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+/* ---------------------------------------------------------
+   Indicator cards
+   --------------------------------------------------------- */
+
+.dg-indicators {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+  margin-top: 22px;
+  z-index: 1;
+}
+
+@media (min-width: 1280px) {
+  .dg-indicators {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.dg-indicator {
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 17px;
+  padding: 14px;
+  background: rgba(248, 250, 252, 0.62);
+  transition:
+    transform 0.3s ease,
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.dg-indicator:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.dg-indicator-icon {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+}
+
+.dg-indicator-icon.success {
+  background: rgba(220, 252, 231, 0.9);
+  color: #059669;
+}
+
+.dg-indicator-icon.warning {
+  background: rgba(254, 243, 199, 0.9);
+  color: #d97706;
+}
+
+.dg-indicator-icon.danger {
+  background: rgba(255, 228, 230, 0.9);
+  color: #e11d48;
+}
+
+.dg-indicator-icon.teal {
+  background: rgba(204, 251, 241, 0.9);
+  color: #0f766e;
+}
+
+.dg-indicator-label {
+  margin-top: 12px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.dg-indicator-value {
+  margin-top: 3px;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* ---------------------------------------------------------
+   Validation / dark premium panel
+   --------------------------------------------------------- */
+
+.dg-validation {
+  position: relative;
+  overflow: hidden;
+  border-radius: 26px;
+  padding: 24px;
+  background:
+    radial-gradient(
+      circle at 90% 5%,
+      rgba(45, 212, 191, 0.18),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 5% 100%,
+      rgba(34, 211, 238, 0.08),
+      transparent 28%
+    ),
+    #020617;
+  color: white;
+  box-shadow:
+    0 25px 70px rgba(15, 23, 42, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.dg-validation::before {
+  content: '';
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  right: -80px;
+  top: -90px;
+  border-radius: 50%;
+  background: rgba(45, 212, 191, 0.13);
+  filter: blur(35px);
+  animation: dgPulse 5s ease-in-out infinite;
+}
+
+@keyframes dgPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.dg-validation-content {
+  position: relative;
+  z-index: 1;
+}
+
+.dg-validation-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #5eead4;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.dg-validation-icon {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #5eead4;
+}
+
+.dg-validation-title {
+  margin-top: 18px;
+  color: white;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.dg-validation-description {
+  margin-top: 7px;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.dg-code {
+  position: relative;
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.dg-code-label {
+  margin-bottom: 7px;
+  color: #64748b;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.dg-code code {
+  color: #ccfbf1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  line-height: 1.9;
+}
+
+.dg-validation-footer {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 17px;
+  color: #64748b;
+  font-size: 9px;
+}
+
+/* ---------------------------------------------------------
+   Responsive
+   --------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .dg-glass-panel,
+  .dg-validation {
+    border-radius: 21px;
+    padding: 18px;
+  }
+
+  .dg-dataset-card {
+    border-radius: 21px;
+  }
+
+  .dg-indicators {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------------------------------------------------------
+   Reduced motion accessibility
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .dg-enter,
+  .dg-dataset-card {
+    animation: none !important;
+  }
+
+  .dg-validation::before {
+    animation: none !important;
+  }
+
+  .dg-dataset-card,
+  .dg-indicator,
+  .dg-refresh {
+    transition: none !important;
+  }
+}

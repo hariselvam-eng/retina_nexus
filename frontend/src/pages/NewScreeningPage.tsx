@@ -1,17 +1,45 @@
-import { AlertTriangle, ArrowRight, Check, FileCheck2, Info, LoaderCircle, RefreshCw, ShieldCheck, UserRound } from 'lucide-react';
-import { useState } from 'react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  Check,
+  FileCheck2,
+  Info,
+  LoaderCircle,
+  RefreshCw,
+  ScanEye,
+  ShieldCheck,
+  UploadCloud,
+  UserRound,
+  Activity,
+} from 'lucide-react';
+import { useState, type DragEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { DataState } from '../components/DataState';
-import { PageIntro } from '../components/PageIntro';
-import { ScreeningStepper } from '../components/ScreeningStepper';
 import { StatusBadge } from '../components/StatusBadge';
-import { UploadArea } from '../components/UploadArea';
-import { ApiRequestError, createPatient, getPatients, runScreening, uploadFundusImage, type ApiErrorCategory, type ScreeningRun } from '../services/api';
+import {
+  ApiRequestError,
+  createPatient,
+  getPatients,
+  runScreening,
+  uploadFundusImage,
+  type ApiErrorCategory,
+  type ScreeningRun,
+} from '../services/api';
+import "../styles/new-screening.css";
 
 type FlowState = 'idle' | 'uploading' | 'processing' | 'complete' | 'error';
 
+const stages = [
+  { key: 'validation', label: 'Validate image', short: 'IMAGE' },
+  { key: 'quality', label: 'Assess quality', short: 'QUALITY' },
+  { key: 'classification', label: 'Classify DR', short: 'DR AI' },
+  { key: 'evidence', label: 'Analyze evidence', short: 'EVIDENCE' },
+  { key: 'retinaguard', label: 'Run RetinaGuard', short: 'TRUST' },
+  { key: 'triage', label: 'Prepare triage', short: 'TRIAGE' },
+];
+
 export function NewScreeningPage() {
   const navigate = useNavigate();
+
   const [selected, setSelected] = useState<File | null>(null);
   const [patientId, setPatientId] = useState('');
   const [eye, setEye] = useState<'left' | 'right'>('right');
@@ -20,75 +48,761 @@ export function NewScreeningPage() {
   const [run, setRun] = useState<ScreeningRun | null>(null);
   const [error, setError] = useState('');
   const [errorCategory, setErrorCategory] = useState<ApiErrorCategory | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   async function startScreening() {
     const identifier = patientId.trim();
+
     if (!selected || !identifier) return;
+
     if (identifier.length < 3) {
       setState('error');
       setErrorCategory('REQUEST_VALIDATION_FAILURE');
       setError('Patient identifier must be at least 3 characters.');
       return;
     }
-    setError(''); setErrorCategory(null); setRun(null); setState('uploading');
+
+    setError('');
+    setErrorCategory(null);
+    setRun(null);
+    setImageId(null);
+    setState('uploading');
+
     try {
       let patient: { id: string };
-      try { patient = await createPatient({ anonymized_identifier: identifier }); } catch (createError) {
-        if (!(createError instanceof ApiRequestError) || createError.status !== 409) throw createError;
-        const existing = await getPatients(); const match = existing.find((item) => item.anonymized_identifier === identifier); if (!match) throw createError; patient = match;
+
+      try {
+        patient = await createPatient({
+          anonymized_identifier: identifier,
+        });
+      } catch (createError) {
+        if (
+          !(createError instanceof ApiRequestError) ||
+          createError.status !== 409
+        ) {
+          throw createError;
+        }
+
+        const existing = await getPatients();
+        const match = existing.find(
+          (item) => item.anonymized_identifier === identifier,
+        );
+
+        if (!match) throw createError;
+        patient = match;
       }
-      const uploaded = await uploadFundusImage(patient.id, eye, selected); setImageId(uploaded.image_id); setState('processing');
-      const result = await runScreening(uploaded.image_id); setRun(result); setState('complete');
+
+      const uploaded = await uploadFundusImage(patient.id, eye, selected);
+
+      setImageId(uploaded.image_id);
+      setState('processing');
+
+      const result = await runScreening(uploaded.image_id);
+
+      setRun(result);
+      setState('complete');
     } catch (requestError) {
       setState('error');
+
       if (requestError instanceof ApiRequestError) {
         setErrorCategory(requestError.category);
-        const details = requestError.validationErrors.map((item) => `${item.loc.join('.')} — ${item.msg}`).join(' ');
-        setError(details ? `${requestError.message} ${details}` : requestError.message);
+
+        const details = requestError.validationErrors
+          .map((item) => `${item.loc.join('.')} — ${item.msg}`)
+          .join(' ');
+
+        setError(
+          details
+            ? `${requestError.message} ${details}`
+            : requestError.message,
+        );
       } else {
         setErrorCategory('INTERNAL_SERVER_ERROR');
-        setError(requestError instanceof Error ? requestError.message : 'The screening pipeline could not process this image.');
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : 'The screening pipeline could not process this image.',
+        );
       }
     }
   }
 
-  const quality = run?.quality?.final as { quality_decision?: string; quality_score?: number; recommended_action?: string; issues?: Array<{ type: string; message: string; recommendation: string }> } | undefined;
+  function chooseFile(file?: File) {
+    if (!file) return;
+
+    const isImage =
+      file.type === 'image/jpeg' ||
+      file.type === 'image/png';
+
+    if (!isImage) {
+      setState('error');
+      setErrorCategory('REQUEST_VALIDATION_FAILURE');
+      setError('Please select a JPEG or PNG retinal image.');
+      return;
+    }
+
+    setSelected(file);
+    setRun(null);
+    setImageId(null);
+    setError('');
+    setErrorCategory(null);
+    setState('idle');
+  }
+
+  function onDrop(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    setDragging(false);
+    chooseFile(event.dataTransfer.files?.[0]);
+  }
+
+  const quality = run?.quality?.final as
+    | {
+        quality_decision?: string;
+        quality_score?: number;
+        recommended_action?: string;
+        issues?: Array<{
+          type: string;
+          message: string;
+          recommendation: string;
+        }>;
+      }
+    | undefined;
+
   const blocked = quality?.quality_decision === 'UNGRADABLE';
-  const progress = run ? runProgress(run) : state === 'processing' ? 2 : 0;
-  return <div className="space-y-7">
-    <PageIntro eyebrow="Guided workflow" title="Start a new screening" description="Move from trusted image intake to an evidence-linked, self-checking result in one controlled flow." action={<div className="flex flex-wrap gap-2"><Link to="/demo" className="btn-secondary">Explore demo <ArrowRight size={15} /></Link><Link to="/history" className="btn-secondary">View history <ArrowRight size={15} /></Link></div>} />
-    <div className="surface overflow-hidden px-5 py-5 sm:px-7"><ScreeningStepper active={progress} /></div>
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_330px]">
-      <div className="space-y-5">
-        <section className="surface p-6 sm:p-7"><div className="flex items-start gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-700"><UserRound size={18} /></div><div><p className="eyebrow">Step 1 · Patient context</p><h2 className="section-title mt-1 text-lg font-extrabold">Keep the record anonymous</h2><p className="mt-1 text-xs leading-5 text-slate-500">Use the identifier your care team already uses. No direct identifiers are required.</p></div></div><div className="mt-6 grid gap-4 sm:grid-cols-2"><label><span className="mb-2 block text-xs font-bold text-ink">Patient identifier</span><input value={patientId} onChange={(event) => setPatientId(event.target.value)} disabled={state === 'uploading' || state === 'processing'} className="w-full rounded-xl border border-line px-3.5 py-3 text-sm font-semibold text-ink outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-50 disabled:bg-mist" /></label><label><span className="mb-2 block text-xs font-bold text-ink">Eye being screened</span><select value={eye} onChange={(event) => setEye(event.target.value as 'left' | 'right')} disabled={state === 'uploading' || state === 'processing'} className="w-full rounded-xl border border-line bg-white px-3.5 py-3 text-sm font-semibold text-ink outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-50 disabled:bg-mist"><option value="right">OD · Right eye</option><option value="left">OS · Left eye</option></select></label></div></section>
-        <section className="surface p-6 sm:p-7"><div className="flex items-start gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-700"><FileCheck2 size={18} /></div><div><p className="eyebrow">Step 1 · Fundus image</p><h2 className="section-title mt-1 text-lg font-extrabold">Upload a clear retinal image</h2><p className="mt-1 text-xs leading-5 text-slate-500">JPEG or PNG · the Image Trust Gate checks integrity, dimensions, channels, and gradability.</p></div></div><div className="mt-6"><UploadArea onFile={(file) => { setSelected(file); setRun(null); setImageId(null); setError(''); setState('idle'); }} /></div></section>
-        {(state === 'uploading' || state === 'processing') && <div className="surface overflow-hidden border-teal-100"><div className="flex items-center gap-3 bg-teal-50 px-5 py-4"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-teal-600 shadow-sm"><LoaderCircle size={19} className="animate-spin" /></div><div><p className="text-sm font-extrabold text-ink">{state === 'uploading' ? 'Securing the image' : 'Running the screening pipeline'}</p><p className="mt-1 text-xs text-slate-500">Each stage records its status; no result is inferred if a module fails.</p></div></div><div className="grid gap-2 px-5 py-4 sm:grid-cols-2">{['Validate image', 'Assess quality', 'Classify DR', 'Analyze evidence', 'Run RetinaGuard', 'Prepare triage'].map((item, index) => <div key={item} className="flex items-center gap-2 text-xs text-slate-500"><LoaderCircle size={13} className={index <= progress ? 'animate-spin text-teal-500' : 'text-slate-300'} />{item}</div>)}</div></div>}
-        {state === 'error' && <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800"><div className="flex items-start gap-3"><AlertTriangle size={18} className="mt-0.5 shrink-0" /><div><p className="font-extrabold">Screening could not be completed</p><p className="mt-1 leading-6">{error}</p><p className="mt-2 text-xs text-rose-700">{failureGuidance(errorCategory)}</p></div></div></div>}
+  const progress = run
+    ? runProgress(run)
+    : state === 'processing'
+      ? 2
+      : state === 'uploading'
+        ? 1
+        : 0;
+
+  const busy = state === 'uploading' || state === 'processing';
+  const canRun = Boolean(selected && patientId.trim()) && !busy;
+
+  return (
+    <div className="screening-page">
+      <div className="screening-orb screening-orb-one" />
+      <div className="screening-orb screening-orb-two" />
+
+      <header className="screening-topbar">
+        <div>
+          <div className="screening-kicker">
+            <span className="live-dot" />
+            CLINICAL AI WORKSPACE
+          </div>
+          <h1>
+            New <span>Screening</span>
+          </h1>
+          <p>
+            A controlled retinal assessment workflow built around
+            image quality, explainability and clinical review.
+          </p>
+        </div>
+
+        <div className="screening-top-actions">
+          <div className="secure-badge">
+            <ShieldCheck size={15} />
+            Secure session
+            <span />
+          </div>
+          <Link to="/history" className="glass-button">
+            Screening history
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+      </header>
+
+      <section className="workflow-card">
+        <div className="workflow-progress">
+          <span
+            style={{
+              width: `${(progress / (stages.length - 1)) * 100}%`,
+            }}
+          />
+        </div>
+
+        {stages.map((stage, index) => {
+          const completed = progress > index;
+          const active = progress === index;
+
+          return (
+            <div
+              className={`workflow-step ${active ? 'active' : ''} ${
+                completed ? 'complete' : ''
+              }`}
+              key={stage.key}
+            >
+              <div className="workflow-number">
+                {completed ? <Check size={13} /> : index + 1}
+              </div>
+              <div>
+                <strong>{stage.short}</strong>
+                <small>{stage.label}</small>
+              </div>
+            </div>
+          );
+        })}
+      </section>
+
+      <main className="screening-content">
+        <section className="glass-card patient-card">
+          <PanelHeading
+            number="01"
+            icon={<UserRound size={18} />}
+            label="PATIENT CONTEXT"
+            title="Anonymous patient record"
+          />
+
+          <p className="card-description">
+            Use the identifier already assigned by the care team.
+            No direct patient identifiers are required.
+          </p>
+
+          <div className="form-grid">
+            <label className="floating-field">
+              <span>Patient identifier</span>
+              <input
+                value={patientId}
+                disabled={busy}
+                onChange={(event) => setPatientId(event.target.value)}
+                placeholder="RNX-2026-00129"
+              />
+              <small>Anonymized identifier · minimum 3 characters</small>
+            </label>
+
+            <div className="eye-field">
+              <span>Eye being screened</span>
+              <div className="eye-toggle">
+                <button
+                  type="button"
+                  disabled={busy}
+                  className={eye === 'right' ? 'selected' : ''}
+                  onClick={() => setEye('right')}
+                >
+                  <b>OD</b>
+                  Right eye
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  className={eye === 'left' ? 'selected' : ''}
+                  onClick={() => setEye('left')}
+                >
+                  <b>OS</b>
+                  Left eye
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="privacy-note">
+            <ShieldCheck size={15} />
+            <span>
+              Identity remains outside the retinal image processing
+              workflow.
+            </span>
+          </div>
+        </section>
+
+        <section className="glass-card upload-card">
+          <PanelHeading
+            number="02"
+            icon={<ScanEye size={18} />}
+            label="RETINAL IMAGE"
+            title="Fundus image intake"
+          />
+
+          <p className="card-description">
+            JPEG or PNG · the Image Trust Gate checks integrity,
+            dimensions, channels and gradability before clinical AI.
+          </p>
+
+          <label
+            className={`retina-dropzone ${selected ? 'selected' : ''} ${
+              dragging ? 'dragging' : ''
+            } ${state === 'processing' ? 'scanning' : ''}`}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={onDrop}
+          >
+            <input
+              type="file"
+              accept="image/jpeg,image/png"
+              disabled={busy}
+              onChange={(event) => chooseFile(event.target.files?.[0])}
+            />
+
+            <div className="retina-visual">
+              <div className="retina-ring ring-a" />
+              <div className="retina-ring ring-b" />
+              <div className="retina-ring ring-c" />
+              <div className="retina-center">
+                <ScanEye size={30} />
+              </div>
+              {state === 'processing' && <div className="scan-line" />}
+            </div>
+
+            <div className="upload-copy">
+              <strong>
+                {state === 'processing'
+                  ? 'Analyzing retinal image'
+                  : selected
+                    ? selected.name
+                    : 'Drop retinal image here'}
+              </strong>
+
+              <span>
+                {state === 'processing'
+                  ? 'The AI pipeline is evaluating the image'
+                  : selected
+                    ? `${formatBytes(selected.size)} · ${selected.type || 'image'}`
+                    : 'or click anywhere to browse from this device'}
+              </span>
+
+              {!selected && (
+                <em>
+                  <UploadCloud size={14} />
+                  JPEG / PNG · secure intake
+                </em>
+              )}
+            </div>
+
+            {selected && !busy && (
+              <span className="change-image">
+                Change image
+              </span>
+            )}
+          </label>
+
+          <div className="upload-trust-row">
+            <span>
+              <FileCheck2 size={14} />
+              Integrity
+            </span>
+            <span>
+              <ShieldCheck size={14} />
+              Quality gate
+            </span>
+            <span>
+              <Activity size={14} />
+              AI ready
+            </span>
+          </div>
+        </section>
+
+        <section className="glass-card pipeline-card">
+          <div className="pipeline-header">
+            <div>
+              <span className="section-label">03 · INTELLIGENCE ENGINE</span>
+              <h2>AI screening pipeline</h2>
+            </div>
+
+            <div className="pipeline-status">
+              <span />
+              {state === 'processing'
+                ? 'ANALYSIS ACTIVE'
+                : state === 'complete'
+                  ? 'ANALYSIS COMPLETE'
+                  : 'STANDBY'}
+            </div>
+          </div>
+
+          <div className="pipeline-visual">
+            <div
+              className="pipeline-fill"
+              style={{
+                width: `${(progress / (stages.length - 1)) * 100}%`,
+              }}
+            />
+
+            {stages.map((stage, index) => {
+              const completed = progress > index;
+              const active = progress === index;
+
+              return (
+                <div
+                  className={`pipeline-node ${completed ? 'complete' : ''} ${
+                    active ? 'active' : ''
+                  }`}
+                  key={stage.key}
+                >
+                  <div className="pipeline-node-dot">
+                    {completed ? (
+                      <Check size={12} />
+                    ) : active && busy ? (
+                      <LoaderCircle
+                        size={13}
+                        className="spin"
+                      />
+                    ) : (
+                      <span />
+                    )}
+                  </div>
+                  <strong>{stage.short}</strong>
+                  <small>{stage.label}</small>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="pipeline-metrics">
+            <PipelineMetric
+              label="INPUT"
+              value={selected ? 'Candidate ready' : 'Awaiting image'}
+            />
+            <PipelineMetric
+              label="MODEL"
+              value="Registered artifact"
+            />
+            <PipelineMetric
+              label="OUTPUT"
+              value={
+                run
+                  ? blocked
+                    ? 'Recapture'
+                    : 'Clinical recommendation'
+                  : 'Pending analysis'
+              }
+            />
+          </div>
+
+          <div className="run-area">
+            {run && imageId ? (
+              <button
+                type="button"
+                className="run-button result-button"
+                onClick={() =>
+                  navigate('/screening/results', {
+                    state: {
+                      screeningId: run.screening_id,
+                      imageId,
+                      run,
+                    },
+                  })
+                }
+              >
+                Open screening result
+                <ArrowRight size={17} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="run-button"
+                disabled={!canRun}
+                onClick={startScreening}
+              >
+                {busy ? (
+                  <>
+                    <LoaderCircle size={17} className="spin" />
+                    {state === 'uploading'
+                      ? 'Securing image...'
+                      : 'Running AI screening...'}
+                  </>
+                ) : (
+                  <>
+                    Run secure screening
+                    <ArrowRight size={17} />
+                  </>
+                )}
+              </button>
+            )}
+
+            <span>
+              AI output is a screening recommendation. Clinical
+              review remains authoritative.
+            </span>
+          </div>
+        </section>
+
+        {state === 'error' && (
+          <section className="glass-card error-card" role="alert">
+            <div className="error-icon">
+              <AlertTriangle size={19} />
+            </div>
+
+            <div className="error-content">
+              <span>PIPELINE INTERRUPTION</span>
+              <h2>Screening could not be completed</h2>
+              <p>{error}</p>
+              <small>{failureGuidance(errorCategory)}</small>
+            </div>
+
+            <button
+              type="button"
+              className="retry-button"
+              onClick={() => {
+                setState('idle');
+                setError('');
+                setErrorCategory(null);
+              }}
+            >
+              <RefreshCw size={15} />
+              Retry
+            </button>
+          </section>
+        )}
+
         {run && <RunSummary run={run} imageId={imageId} />}
-        <div className="flex flex-col-reverse justify-between gap-3 sm:flex-row sm:items-center"><p className="flex items-center gap-2 text-[11px] leading-5 text-slate-400"><Info size={14} className="shrink-0 text-teal-600" /> Ungradable images stop before clinical AI and receive recapture guidance.</p>{run && imageId ? <button onClick={() => navigate('/screening/results', { state: { screeningId: run.screening_id, imageId, run } })} className="btn-primary">Open screening result <ArrowRight size={16} /></button> : <button disabled={!selected || !patientId.trim() || state === 'uploading' || state === 'processing'} onClick={startScreening} className="btn-primary disabled:cursor-not-allowed disabled:opacity-40">Run secure screening <ArrowRight size={16} /></button>}</div>
-      </div>
-      <aside className="space-y-4"><div className="surface p-5"><p className="eyebrow">What the workflow protects</p><div className="mt-5 space-y-4">{[['01', 'Quality before AI', 'The Trust Gate blocks ungradable inputs.'], ['02', 'Evidence alongside grade', 'Structures and lesions remain separate supporting evidence.'], ['03', 'Human review when needed', 'RetinaGuard makes uncertainty visible to the care team.']].map(([number, title, detail]) => <div key={number} className="flex gap-3"><span className="text-[11px] font-extrabold text-teal-600">{number}</span><div><p className="text-xs font-extrabold text-ink">{title}</p><p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p></div></div>)}</div></div><div className="rounded-2xl border border-ink/10 bg-ink p-5 text-white"><div className="flex items-center gap-2"><ShieldCheck size={17} className="text-teal-300" /><p className="text-xs font-extrabold">Trust-first care workflow</p></div><p className="mt-3 text-xs leading-5 text-slate-300">AI output is a screening recommendation. A clinician remains responsible for the final decision.</p></div></aside>
+
+        <section className="safety-grid">
+          <SafetyCard
+            number="01"
+            title="Quality before AI"
+            detail="The Image Trust Gate blocks ungradable inputs before clinical AI output."
+            icon={<FileCheck2 size={17} />}
+          />
+          <SafetyCard
+            number="02"
+            title="Evidence alongside grade"
+            detail="Structures and lesions remain separate supporting evidence for verification."
+            icon={<ScanEye size={17} />}
+          />
+          <SafetyCard
+            number="03"
+            title="Human review when needed"
+            detail="RetinaGuard makes uncertainty visible to the care team."
+            icon={<ShieldCheck size={17} />}
+          />
+        </section>
+
+        <div className="screening-disclaimer">
+          <Info size={14} />
+          Ungradable images stop before clinical AI and receive
+          recapture guidance.
+        </div>
+      </main>
     </div>
-  </div>;
+  );
 }
 
-function RunSummary({ run, imageId }: { run: ScreeningRun; imageId: string | null }) {
-  const quality = run.quality?.final as { quality_decision?: string; quality_score?: number; recommended_action?: string; issues?: Array<{ type: string; message: string; recommendation: string }> } | undefined;
+function PanelHeading({
+  number,
+  icon,
+  label,
+  title,
+}: {
+  number: string;
+  icon: ReactNode;
+  label: string;
+  title: string;
+}) {
+  return (
+    <div className="panel-heading">
+      <div className="panel-number">{number}</div>
+      <div className="panel-icon">{icon}</div>
+      <div>
+        <span>{label}</span>
+        <h2>{title}</h2>
+      </div>
+    </div>
+  );
+}
+
+function PipelineMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function SafetyCard({
+  number,
+  title,
+  detail,
+  icon,
+}: {
+  number: string;
+  title: string;
+  detail: string;
+  icon: ReactNode;
+}) {
+  return (
+    <div className="safety-card">
+      <div className="safety-top">
+        <span>{number}</span>
+        <div>{icon}</div>
+      </div>
+      <h3>{title}</h3>
+      <p>{detail}</p>
+    </div>
+  );
+}
+
+function RunSummary({
+  run,
+  imageId,
+}: {
+  run: ScreeningRun;
+  imageId: string | null;
+}) {
+  const quality = run.quality?.final as
+    | {
+        quality_decision?: string;
+        quality_score?: number;
+        recommended_action?: string;
+        issues?: Array<{
+          type: string;
+          message: string;
+          recommendation: string;
+        }>;
+      }
+    | undefined;
+
   const blocked = quality?.quality_decision === 'UNGRADABLE';
-  const primaryComplete = run.primary_status === 'COMPLETED' || Boolean(run.classification && run.triage);
-  return <div className={`rounded-2xl border p-5 ${run.status === 'FAILED' ? 'border-rose-200 bg-rose-50' : blocked ? 'border-amber-200 bg-amber-50' : 'border-teal-100 bg-teal-50/60'}`}><div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"><div><p className="eyebrow">Pipeline result</p><h2 className="section-title mt-1 text-lg font-extrabold">{run.status === 'FAILED' ? 'Run failed safely' : blocked ? 'Recapture recommended' : primaryComplete ? 'Primary screening complete' : 'Screening pipeline in progress'}</h2><p className="mt-1 text-xs leading-5 text-slate-600">{run.message}</p></div><StatusBadge tone={run.status === 'FAILED' ? 'danger' : blocked ? 'warning' : 'success'}>{run.status}</StatusBadge></div>{run.error && <p className="mt-4 rounded-xl bg-white/70 p-3 text-xs leading-5 text-rose-800">Stage <strong>{run.error.stage}</strong>: {run.error.message}</p>}{quality && <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Mini label="Quality" value={`${quality.quality_decision ?? '—'} · ${Math.round((quality.quality_score ?? 0) * 100)}%`} /><Mini label="Image" value={imageId ? 'Stored securely' : 'Unavailable'} /><Mini label="Evidence" value={run.evidence_status === 'AVAILABLE' ? 'Available' : run.evidence_status === 'PROCESSING' ? 'Processing' : run.evidence_status ?? 'Not run'} /><Mini label="Next action" value={blocked ? 'Recapture image' : run.triage?.recommendation ?? 'Review result'} /></div>}{blocked && quality?.issues && quality.issues.length > 0 && <div className="mt-4 space-y-2">{quality.issues.map((issue) => <div key={issue.type} className="rounded-xl bg-white/70 p-3 text-xs"><p className="font-extrabold text-ink">{issue.type.replaceAll('_', ' ')}</p><p className="mt-1 text-slate-600">{issue.message}</p><p className="mt-1 font-semibold text-teal-800">{issue.recommendation}</p></div>)}</div>}</div>;
+  const primaryComplete =
+    run.primary_status === 'COMPLETED' ||
+    Boolean(run.classification && run.triage);
+
+  return (
+    <section
+      className={`glass-card result-card ${
+        run.status === 'FAILED'
+          ? 'danger'
+          : blocked
+            ? 'warning'
+            : 'success'
+      }`}
+    >
+      <div className="result-heading">
+        <div>
+          <span>04 · PIPELINE RESULT</span>
+          <h2>
+            {run.status === 'FAILED'
+              ? 'Run failed safely'
+              : blocked
+                ? 'Recapture recommended'
+                : primaryComplete
+                  ? 'Primary screening complete'
+                  : 'Screening pipeline in progress'}
+          </h2>
+          <p>{run.message}</p>
+        </div>
+
+        <StatusBadge
+          tone={
+            run.status === 'FAILED'
+              ? 'danger'
+              : blocked
+                ? 'warning'
+                : 'success'
+          }
+        >
+          {run.status}
+        </StatusBadge>
+      </div>
+
+      {run.error && (
+        <div className="result-error">
+          Stage <strong>{run.error.stage}</strong>:{' '}
+          {run.error.message}
+        </div>
+      )}
+
+      {quality && (
+        <div className="result-metrics">
+          <ResultMetric
+            label="Quality"
+            value={`${quality.quality_decision ?? '—'} · ${Math.round(
+              (quality.quality_score ?? 0) * 100,
+            )}%`}
+          />
+          <ResultMetric
+            label="Image"
+            value={imageId ? 'Stored securely' : 'Unavailable'}
+          />
+          <ResultMetric
+            label="Evidence"
+            value={
+              run.evidence_status === 'AVAILABLE'
+                ? 'Available'
+                : run.evidence_status === 'PROCESSING'
+                  ? 'Processing'
+                  : run.evidence_status ?? 'Not run'
+            }
+          />
+          <ResultMetric
+            label="Next action"
+            value={
+              blocked
+                ? 'Recapture image'
+                : run.triage?.recommendation ?? 'Review result'
+            }
+          />
+        </div>
+      )}
+
+      {blocked && quality?.issues && quality.issues.length > 0 && (
+        <div className="quality-issues">
+          {quality.issues.map((issue) => (
+            <div className="quality-issue" key={issue.type}>
+              <strong>{issue.type.replaceAll('_', ' ')}</strong>
+              <span>{issue.message}</span>
+              <em>{issue.recommendation}</em>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
 }
 
-function Mini({ label, value }: { label: string; value: string }) { return <div className="rounded-xl bg-white/70 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p><p className="mt-1 truncate text-xs font-extrabold text-ink">{value}</p></div>; }
-function runProgress(run: ScreeningRun) { const completed = Object.values(run.stage_status).filter((value) => value === 'COMPLETED').length; return Math.min(5, Math.max(1, completed)); }
+function ResultMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="result-metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024)
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function runProgress(run: ScreeningRun) {
+  const completed = Object.values(run.stage_status).filter(
+    (value) => value === 'COMPLETED',
+  ).length;
+
+  return Math.min(5, Math.max(1, completed));
+}
+
 function failureGuidance(category: ApiErrorCategory | null) {
   switch (category) {
-    case 'REQUEST_VALIDATION_FAILURE': return 'REQUEST_VALIDATION_FAILURE · The request was rejected before image processing. Correct the input and retry.';
-    case 'API_CONNECTION_FAILURE': return 'API_CONNECTION_FAILURE · No clinical prediction was created because the backend could not be reached.';
-    case 'MODEL_UNAVAILABLE': return 'MODEL_UNAVAILABLE · The API responded, but a registered model artifact was unavailable; no prediction was created.';
-    case 'INFERENCE_FAILURE': return 'INFERENCE_FAILURE · The request reached the pipeline, but inference failed safely; no prediction was created.';
-    case 'QUALITY_GATE_REJECTION': return 'QUALITY_GATE_REJECTION · The Image Trust Gate rejected this input; follow the recapture guidance before continuing.';
-    case 'INTERNAL_SERVER_ERROR': return 'INTERNAL_SERVER_ERROR · The backend reported an internal failure before a result could be rendered.';
-    default: return 'No clinical prediction was created. Review the request status and retry when the underlying issue is resolved.';
+    case 'REQUEST_VALIDATION_FAILURE':
+      return 'REQUEST_VALIDATION_FAILURE · Correct the input and retry.';
+    case 'API_CONNECTION_FAILURE':
+      return 'API_CONNECTION_FAILURE · No clinical prediction was created because the backend could not be reached.';
+    case 'MODEL_UNAVAILABLE':
+      return 'MODEL_UNAVAILABLE · A registered model artifact was unavailable; no prediction was created.';
+    case 'INFERENCE_FAILURE':
+      return 'INFERENCE_FAILURE · Inference failed safely; no prediction was created.';
+    case 'QUALITY_GATE_REJECTION':
+      return 'QUALITY_GATE_REJECTION · Follow the image recapture guidance before continuing.';
+    case 'INTERNAL_SERVER_ERROR':
+      return 'INTERNAL_SERVER_ERROR · The backend reported an internal failure before a result could be rendered.';
+    default:
+      return 'No clinical prediction was created. Review the request status and retry when the issue is resolved.';
   }
 }

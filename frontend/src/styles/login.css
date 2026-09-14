@@ -1,0 +1,551 @@
+/* =========================================================
+   RETINA-NEXUS — PREMIUM LOGIN ANIMATION
+========================================================= */
+
+.login-page {
+  --login-teal: #0b7770;
+  --login-teal-light: #54e4d5;
+  --login-dark: #071c1c;
+  --login-mist: #f7faf9;
+  overflow: hidden;
+}
+
+/* =========================================================
+   PAGE REVEAL
+========================================================= */
+
+.login-page .login-left {
+  animation: loginPanelReveal 1.1s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.login-page .login-right {
+  animation: loginRightReveal 1s cubic-bezier(.22, 1, .36, 1) .15s both;
+}
+
+@keyframes loginPanelReveal {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes loginRightReveal {
+  from {
+    opacity: 0;
+    transform: translateX(35px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.login-brand {
+  opacity: 0;
+  animation: brandReveal .8s cubic-bezier(.22, 1, .36, 1) .65s forwards;
+}
+
+@keyframes brandReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+    filter: blur(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* =========================================================
+   BADGE
+========================================================= */
+
+.login-badge {
+  opacity: 0;
+  animation: badgeReveal .7s cubic-bezier(.22, 1, .36, 1) 1s forwards;
+}
+
+@keyframes badgeReveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================================================
+   HERO WORD REVEAL
+========================================================= */
+
+.login-title-line {
+  display: block;
+  overflow: hidden;
+}
+
+.login-title-word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(105%);
+  filter: blur(10px);
+
+  animation: wordReveal
+    .9s
+    cubic-bezier(.16, 1, .3, 1)
+    forwards;
+}
+
+.login-title-line:nth-child(1) .login-title-word {
+  animation-delay: 1.15s;
+}
+
+.login-title-line:nth-child(2) .login-title-word {
+  animation-delay: 1.3s;
+}
+
+.login-title-line:nth-child(3) .login-title-word {
+  animation-delay: 1.45s;
+}
+
+@keyframes wordReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(105%);
+    filter: blur(10px);
+  }
+
+  60% {
+    opacity: 1;
+    filter: blur(1px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.login-description {
+  opacity: 0;
+  animation: descriptionReveal
+    .8s
+    cubic-bezier(.22, 1, .36, 1)
+    1.7s forwards;
+}
+
+@keyframes descriptionReveal {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* =========================================================
+   FEATURE CARDS
+========================================================= */
+
+.login-feature {
+  opacity: 0;
+  animation: featureReveal
+    .7s
+    cubic-bezier(.22, 1, .36, 1)
+    forwards;
+}
+
+.login-feature:nth-child(1) {
+  animation-delay: 1.9s;
+}
+
+.login-feature:nth-child(2) {
+  animation-delay: 2.05s;
+}
+
+.login-feature:nth-child(3) {
+  animation-delay: 2.2s;
+}
+
+@keyframes featureReveal {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.login-feature:hover {
+  transform: translateY(-5px) scale(1.015);
+  border-color: rgba(84, 228, 213, .25);
+  background: rgba(84, 228, 213, .08);
+}
+
+/* =========================================================
+   TRUST LINE
+========================================================= */
+
+.login-trust {
+  opacity: 0;
+  animation: trustReveal
+    .7s
+    ease
+    2.4s forwards;
+}
+
+@keyframes trustReveal {
+  from {
+    opacity: 0;
+    transform: translateX(-15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* =========================================================
+   LOGIN CARD
+========================================================= */
+
+.login-card {
+  opacity: 0;
+  animation: cardReveal
+    1s
+    cubic-bezier(.16, 1, .3, 1)
+    .55s forwards;
+}
+
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(45px) scale(.96);
+    filter: blur(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* =========================================================
+   LOGIN HEADER
+========================================================= */
+
+.login-header {
+  opacity: 0;
+  animation: headerReveal
+    .75s
+    cubic-bezier(.22, 1, .36, 1)
+    .95s forwards;
+}
+
+@keyframes headerReveal {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   FORM ITEMS
+========================================================= */
+
+.login-form-item {
+  opacity: 0;
+  animation: formReveal
+    .65s
+    cubic-bezier(.22, 1, .36, 1)
+    forwards;
+}
+
+.login-form-item:nth-child(1) {
+  animation-delay: 1.25s;
+}
+
+.login-form-item:nth-child(2) {
+  animation-delay: 1.38s;
+}
+
+.login-form-item:nth-child(3) {
+  animation-delay: 1.51s;
+}
+
+@keyframes formReveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   INPUT INTERACTION
+========================================================= */
+
+.login-input {
+  transition:
+    border-color .25s ease,
+    box-shadow .25s ease,
+    transform .25s ease,
+    background-color .25s ease;
+}
+
+.login-input:focus {
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   LOGIN BUTTON
+========================================================= */
+
+.login-button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease,
+    background-color .25s ease;
+}
+
+.login-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255,255,255,.22) 45%,
+    transparent 70%
+  );
+
+  transform: translateX(-120%);
+  animation: buttonShine 4s ease-in-out 3s infinite;
+  z-index: -1;
+}
+
+.login-button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 28px rgba(11,119,112,.22);
+}
+
+.login-button:active {
+  transform: translateY(0) scale(.985);
+}
+
+@keyframes buttonShine {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  35%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+/* =========================================================
+   SECURITY CARD
+========================================================= */
+
+.login-security {
+  opacity: 0;
+  animation:
+    securityReveal
+    .7s
+    cubic-bezier(.22, 1, .36, 1)
+    1.75s forwards;
+}
+
+@keyframes securityReveal {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   FLOATING ORBITS
+========================================================= */
+
+.login-orbit {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid rgba(84, 228, 213, .1);
+  border-radius: 999px;
+  animation: orbitFloat 12s ease-in-out infinite;
+}
+
+.login-orbit.one {
+  width: 520px;
+  height: 520px;
+  right: -240px;
+  top: 10%;
+}
+
+.login-orbit.two {
+  width: 360px;
+  height: 360px;
+  right: -150px;
+  top: 20%;
+  animation-delay: -3s;
+}
+
+.login-orbit.three {
+  width: 680px;
+  height: 680px;
+  left: -420px;
+  bottom: -280px;
+  animation-delay: -6s;
+}
+
+@keyframes orbitFloat {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  50% {
+    transform: rotate(8deg) scale(1.035);
+  }
+}
+
+/* =========================================================
+   GLOWING PARTICLES
+========================================================= */
+
+.login-particle {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--login-teal-light);
+  box-shadow: 0 0 18px rgba(84,228,213,.7);
+  opacity: 0;
+  animation: particleFloat 5s ease-in-out infinite;
+}
+
+.login-particle.one {
+  left: 18%;
+  top: 35%;
+  animation-delay: 2s;
+}
+
+.login-particle.two {
+  left: 72%;
+  top: 20%;
+  animation-delay: 3.2s;
+}
+
+.login-particle.three {
+  left: 58%;
+  top: 75%;
+  animation-delay: 1s;
+}
+
+.login-particle.four {
+  left: 34%;
+  top: 70%;
+  animation-delay: 4s;
+}
+
+@keyframes particleFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(.5);
+  }
+
+  25% {
+    opacity: .8;
+  }
+
+  50% {
+    transform: translateY(-20px) scale(1);
+  }
+
+  75% {
+    opacity: .35;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-45px) scale(.5);
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 1023px) {
+  .login-page .login-right {
+    animation-delay: .1s;
+  }
+
+  .login-card {
+    animation-delay: .3s;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .login-page *,
+  .login-page *::before,
+  .login-page *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

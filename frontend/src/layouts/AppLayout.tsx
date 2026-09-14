@@ -1,9 +1,44 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
+
 import { Header } from '../components/Header';
 import { Sidebar } from '../components/Sidebar';
+import { ChatBot } from '../components/ChatBot';
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  return <div className="flex min-h-screen bg-mist"><Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} /><div className="flex min-w-0 flex-1 flex-col"><Header onMenu={() => setSidebarOpen(true)} /><main className="flex-1 px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10"><div className="mx-auto max-w-[1480px]"><Outlet /></div></main><footer className="px-5 pb-6 text-center text-[10px] text-slate-400 sm:px-8 lg:px-10">RETINA-NEXUS · Care intelligence workspace · Prototype · AI output requires clinical review</footer></div></div>;
+
+  return (
+    <div className="app-shell">
+      <div className="app-atmosphere" />
+
+      <div className="app-layout">
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+
+        <div className="app-content">
+          <Header onMenu={() => setSidebarOpen(true)} />
+
+          <main className="app-main">
+            <div className="app-container">
+              <Outlet />
+            </div>
+          </main>
+
+          <footer className="app-footer">
+            <span>RETINA NEXUS</span>
+            <span className="footer-separator">•</span>
+            <span>Clinical intelligence workspace</span>
+            <span className="footer-separator">•</span>
+            <span>AI output requires clinical review</span>
+          </footer>
+        </div>
+      </div>
+
+      {/* Global chatbot - available throughout the application */}
+      <ChatBot />
+    </div>
+  );
 }

@@ -1,31 +1,1147 @@
-import { AlertTriangle, Check, ClipboardCheck, FileText, LoaderCircle, MessageSquare, RefreshCw, RotateCcw, ShieldCheck, UserRound, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  Check,
+  ChevronRight,
+  ClipboardCheck,
+  Eye,
+  FileText,
+  LoaderCircle,
+  MessageSquare,
+  RefreshCw,
+  RotateCcw,
+  ScanEye,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+  X,
+  Zap,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+
 import { DataState, EmptyState, ErrorState } from '../components/DataState';
-import { PageIntro } from '../components/PageIntro';
 import { StatusBadge } from '../components/StatusBadge';
-import { getReviewQueue, getScreeningRun, submitReview, imageContentUrl, type ReviewQueueItem, type ScreeningRun } from '../services/api';
+import {
+  getReviewQueue,
+  getScreeningRun,
+  submitReview,
+  imageContentUrl,
+  type ReviewQueueItem,
+  type ScreeningRun,
+} from '../services/api';
+
+import '../styles/review.css';
 
 type ReviewDecision = 'approve' | 'modify' | 'reject' | 'request_recapture';
-type ReviewNavigation = { screeningId?: string };
+
+type ReviewNavigation = {
+  screeningId?: string;
+};
 
 export function ReviewPage() {
-  const location = useLocation(); const navigation = (location.state as ReviewNavigation | null) ?? null;
-  const [queue, setQueue] = useState<ReviewQueueItem[]>([]); const [selectedId, setSelectedId] = useState(navigation?.screeningId ?? ''); const [run, setRun] = useState<ScreeningRun | null>(null); const [loading, setLoading] = useState(true); const [detailLoading, setDetailLoading] = useState(false); const [error, setError] = useState(''); const [decision, setDecision] = useState<ReviewDecision>('approve'); const [modifiedGrade, setModifiedGrade] = useState('2'); const [comments, setComments] = useState(''); const [saving, setSaving] = useState(false); const [saved, setSaved] = useState('');
-  function loadQueue() { setLoading(true); setError(''); getReviewQueue().then((items) => { setQueue(items); if (!selectedId && items[0]) setSelectedId(items[0].session_id); }).catch((requestError) => setError(requestError instanceof Error ? requestError.message : 'Unable to load the clinical review queue.')).finally(() => setLoading(false)); }
-  useEffect(loadQueue, []);
-  useEffect(() => { if (!selectedId) return; setDetailLoading(true); getScreeningRun(selectedId).then(setRun).catch((requestError) => setError(requestError instanceof Error ? requestError.message : 'Unable to load the selected screening.')).finally(() => setDetailLoading(false)); }, [selectedId]);
-  const selected = useMemo(() => queue.find((item) => item.session_id === selectedId), [queue, selectedId]);
-  async function saveReview() { if (!selectedId) return; setSaving(true); setSaved(''); setError(''); try { await submitReview(selectedId, { decision, modified_grade: decision === 'modify' ? Number(modifiedGrade) : undefined, comments: comments.trim() || undefined }); setSaved('Decision recorded in the audit trail.'); await loadQueue(); } catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to save the clinician decision. Sign in with a clinician account and retry.'); } finally { setSaving(false); } }
-  return <div className="space-y-6"><PageIntro eyebrow="Human-in-the-loop" title="Clinical review" description="Review the AI recommendation, evidence, and trust factors before recording the final clinician decision." action={<button onClick={loadQueue} className="btn-secondary"><RefreshCw size={15} /> Refresh queue</button>} />{loading ? <DataState label="Loading review queue" /> : error && queue.length === 0 ? <ErrorState message={error} onRetry={loadQueue} /> : <div className="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]"><Queue queue={queue} selectedId={selectedId} onSelect={setSelectedId} /><div className="min-w-0">{detailLoading ? <DataState label="Loading screening evidence" /> : !selected || !run ? <EmptyState title="Select a case to review" detail="Choose an item from the review queue to inspect the AI result and supporting evidence." /> : <ReviewDetail item={selected} run={run} decision={decision} setDecision={setDecision} modifiedGrade={modifiedGrade} setModifiedGrade={setModifiedGrade} comments={comments} setComments={setComments} saving={saving} saved={saved} error={error} onSave={saveReview} />}</div></div>}</div>;
+  const location = useLocation();
+
+  const navigation =
+    (location.state as ReviewNavigation | null) ?? null;
+
+  const [queue, setQueue] = useState<ReviewQueueItem[]>([]);
+  const [selectedId, setSelectedId] = useState(
+    navigation?.screeningId ?? ''
+  );
+
+  const [run, setRun] = useState<ScreeningRun | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const [error, setError] = useState('');
+
+  const [decision, setDecision] =
+    useState<ReviewDecision>('approve');
+
+  const [modifiedGrade, setModifiedGrade] =
+    useState('2');
+
+  const [comments, setComments] = useState('');
+
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState('');
+
+  function loadQueue() {
+    setLoading(true);
+    setError('');
+
+    getReviewQueue()
+      .then((items) => {
+        setQueue(items);
+
+        if (!selectedId && items[0]) {
+          setSelectedId(items[0].session_id);
+        }
+      })
+      .catch((requestError) => {
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : 'Unable to load the clinical review queue.'
+        );
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }
+
+  useEffect(() => {
+    loadQueue();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedId) return;
+
+    setDetailLoading(true);
+    setError('');
+
+    getScreeningRun(selectedId)
+      .then(setRun)
+      .catch((requestError) => {
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : 'Unable to load the selected screening.'
+        );
+      })
+      .finally(() => {
+        setDetailLoading(false);
+      });
+  }, [selectedId]);
+
+  const selected = useMemo(
+    () =>
+      queue.find(
+        (item) => item.session_id === selectedId
+      ),
+    [queue, selectedId]
+  );
+
+  async function saveReview() {
+    if (!selectedId) return;
+
+    setSaving(true);
+    setSaved('');
+    setError('');
+
+    try {
+      await submitReview(selectedId, {
+        decision,
+        modified_grade:
+          decision === 'modify'
+            ? Number(modifiedGrade)
+            : undefined,
+        comments:
+          comments.trim() || undefined,
+      });
+
+      setSaved(
+        'Clinical decision recorded successfully in the audit trail.'
+      );
+
+      await loadQueue();
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'Unable to save the clinician decision.'
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const openCases = queue.filter(
+    (item) => item.status === 'open'
+  ).length;
+
+  return (
+    <div className="review-page">
+      {/* HEADER */}
+
+      <div className="review-hero">
+        <div>
+          <div className="review-eyebrow">
+            <span className="pulse-dot" />
+            HUMAN-IN-THE-LOOP CLINICAL AI
+          </div>
+
+          <h1>Clinical Review</h1>
+
+          <p>
+            Validate AI findings, inspect retinal evidence and
+            record the final clinical decision.
+          </p>
+        </div>
+
+        <div className="review-header-actions">
+          <div className="queue-counter">
+            <div className="queue-counter-icon">
+              <ClipboardCheck size={17} />
+            </div>
+
+            <div>
+              <span>OPEN CASES</span>
+              <strong>{openCases}</strong>
+            </div>
+          </div>
+
+          <button
+            onClick={loadQueue}
+            className="review-refresh"
+            disabled={loading}
+          >
+            <RefreshCw
+              size={15}
+              className={loading ? 'spin' : ''}
+            />
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <DataState label="Loading clinical review queue" />
+      ) : error && queue.length === 0 ? (
+        <ErrorState
+          message={error}
+          onRetry={loadQueue}
+        />
+      ) : (
+        <div className="review-layout">
+
+          {/* LEFT QUEUE */}
+
+          <ReviewQueue
+            queue={queue}
+            selectedId={selectedId}
+            onSelect={(id) => {
+              setSelectedId(id);
+              setRun(null);
+              setSaved('');
+              setError('');
+            }}
+          />
+
+          {/* MAIN */}
+
+          <main className="review-main">
+
+            {detailLoading ? (
+              <DataState label="Loading screening evidence" />
+            ) : !selected || !run ? (
+              <div className="review-empty">
+                <div className="review-empty-icon">
+                  <ScanEye size={28} />
+                </div>
+
+                <h2>Select a case</h2>
+
+                <p>
+                  Choose a case from the review queue to
+                  inspect the AI result and supporting evidence.
+                </p>
+              </div>
+            ) : (
+              <ReviewDetail
+                item={selected}
+                run={run}
+                decision={decision}
+                setDecision={setDecision}
+                modifiedGrade={modifiedGrade}
+                setModifiedGrade={setModifiedGrade}
+                comments={comments}
+                setComments={setComments}
+                saving={saving}
+                saved={saved}
+                error={error}
+                onSave={saveReview}
+              />
+            )}
+
+          </main>
+        </div>
+      )}
+    </div>
+  );
 }
 
-function Queue({ queue, selectedId, onSelect }: { queue: ReviewQueueItem[]; selectedId: string; onSelect: (id: string) => void }) { return <aside className="surface overflow-hidden"><div className="border-b border-line px-5 py-4"><div className="flex items-center justify-between"><div><p className="eyebrow">Open worklist</p><h2 className="section-title mt-1 text-base font-extrabold">Cases for review</h2></div><span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-extrabold text-amber-700">{queue.filter((item) => item.status === 'open').length}</span></div></div>{queue.length === 0 ? <div className="p-6"><EmptyState title="Queue is clear" detail="No completed screening currently requires clinician review." /></div> : <div className="divide-y divide-line">{queue.map((item) => <button key={item.session_id} onClick={() => onSelect(item.session_id)} className={`w-full p-5 text-left transition ${selectedId === item.session_id ? 'bg-teal-50/70' : 'hover:bg-mist'}`}><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-extrabold text-ink">{shortId(item.session_id)}</p><p className="mt-1 text-[11px] text-slate-500">{shortId(item.patient_id)} · {item.eye.toUpperCase()}</p></div><StatusBadge tone={item.trust_category === 'UNRELIABLE' ? 'danger' : item.status === 'reviewed' ? 'success' : 'warning'}>{item.status === 'reviewed' ? 'Reviewed' : item.trust_category ?? 'Review'}</StatusBadge></div><p className="mt-4 text-xs font-semibold leading-5 text-slate-600">{item.reason}</p><p className="mt-2 text-[10px] text-slate-400">{item.predicted_grade_label ?? 'No AI grade'}{item.referable_dr ? ' · Referable signal' : ''}</p></button>)}</div>}</aside>; }
 
-function ReviewDetail({ item, run, decision, setDecision, modifiedGrade, setModifiedGrade, comments, setComments, saving, saved, error, onSave }: { item: ReviewQueueItem; run: ScreeningRun; decision: ReviewDecision; setDecision: (value: ReviewDecision) => void; modifiedGrade: string; setModifiedGrade: (value: string) => void; comments: string; setComments: (value: string) => void; saving: boolean; saved: string; error: string; onSave: () => void }) {
-  const [overlay, setOverlay] = useState(true); const classification = run.classification; const trust = run.retinaguard; const heatmap = run.explainability?.grad_cam.overlay_data_uri; const lesion = run.explainability?.lesion_evidence_map_data_uri;
-  return <div className="space-y-5"><div className="surface overflow-hidden"><div className="flex flex-col justify-between gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center"><div><p className="eyebrow">Case {shortId(item.session_id)}</p><h2 className="section-title mt-1 text-lg font-extrabold">AI recommendation and evidence</h2></div><StatusBadge tone={item.trust_category === 'UNRELIABLE' ? 'danger' : 'warning'}>{item.trust_category ?? 'Review requested'}</StatusBadge></div><div className="p-5"><div className="relative flex min-h-[300px] items-center justify-center overflow-hidden rounded-2xl bg-[#132643] sm:min-h-[430px]"><img src={imageContentUrl(item.image_id)} alt="Fundus image for clinical review" className="relative max-h-[430px] w-full object-contain" />{overlay && heatmap && <img src={heatmap} alt="Grad-CAM overlay" className="pointer-events-none absolute inset-0 h-full w-full object-contain opacity-70" />}{overlay && lesion && <img src={lesion} alt="Lesion evidence overlay" className="pointer-events-none absolute inset-0 h-full w-full object-contain opacity-60" />}<span className="absolute left-3 top-3 rounded-lg bg-black/40 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white/80">Original + evidence</span></div><button onClick={() => setOverlay(!overlay)} className="btn-secondary mt-4">{overlay ? <X size={14} /> : <Check size={14} />} {overlay ? 'Hide evidence overlays' : 'Show evidence overlays'}</button></div></div><div className="grid gap-5 lg:grid-cols-2"><div className="surface p-5"><div className="flex items-center gap-2"><ShieldCheck size={17} className="text-teal-600" /><p className="eyebrow">AI screening recommendation</p></div><p className="section-title mt-2 text-2xl font-extrabold text-ink">{classification?.predicted_grade_label ?? 'No grade returned'}</p><div className="mt-4 grid grid-cols-2 gap-3"><Info label="Referable DR" value={classification ? classification.referable_dr ? 'Yes' : 'No' : '—'} /><Info label="Confidence" value={classification ? `${Math.round(classification.raw_confidence * 100)}% raw` : '—'} /><Info label="Trust" value={trust ? `${Math.round(trust.trust_score * 100)}/100` : '—'} /><Info label="Action" value={item.reason} /></div><p className="mt-4 border-t border-line pt-4 text-[11px] leading-5 text-slate-500">This is the model's recommendation. It is not the final clinical decision.</p></div><div className="surface p-5"><div className="flex items-center gap-2"><FileText size={17} className="text-teal-600" /><p className="eyebrow">Trust factors</p></div><div className="mt-4 space-y-3">{(trust?.contributing_factors ?? []).slice(0, 6).map((factor) => <div key={factor.factor} className="flex justify-between gap-3 border-b border-line pb-3 last:border-0 last:pb-0"><span className="text-xs capitalize text-slate-500">{factor.factor.replaceAll('_', ' ')}</span><span className="text-xs font-bold text-ink">{factor.raw_value == null ? 'Not available' : `${Math.round(factor.score * 100)}%`}</span></div>)}</div></div></div><div className="surface p-5"><div className="flex items-start gap-3"><div className="rounded-xl bg-teal-50 p-2.5 text-teal-700"><ClipboardCheck size={18} /></div><div><p className="eyebrow">Final clinician decision</p><h3 className="section-title mt-1 text-lg font-extrabold">Record the care team's review</h3><p className="mt-1 text-xs leading-5 text-slate-500">This decision is stored separately from the AI recommendation and added to the audit trail.</p></div></div><div className="mt-6 grid gap-3 sm:grid-cols-4">{([['approve', 'Approve', Check], ['modify', 'Modify grade', RotateCcw], ['request_recapture', 'Request recapture', RefreshCw], ['reject', 'Reject', X]] as const).map(([value, label, Icon]) => <button key={value} onClick={() => setDecision(value)} className={`flex flex-col items-center gap-2 rounded-xl border p-3 text-center text-xs font-bold transition ${decision === value ? 'border-teal-500 bg-teal-50 text-teal-800 ring-2 ring-teal-100' : 'border-line text-slate-500 hover:border-teal-300'}`}><Icon size={17} />{label}</button>)}</div>{decision === 'modify' && <label className="mt-4 block"><span className="mb-2 block text-xs font-bold text-ink">Modified DR grade</span><select value={modifiedGrade} onChange={(event) => setModifiedGrade(event.target.value)} className="w-full rounded-xl border border-line bg-white px-3 py-3 text-sm font-semibold outline-none sm:w-64"><option value="0">0 · No DR</option><option value="1">1 · Mild</option><option value="2">2 · Moderate</option><option value="3">3 · Severe</option><option value="4">4 · Proliferative DR</option></select></label>}<label className="mt-4 block"><span className="mb-2 flex items-center gap-2 text-xs font-bold text-ink"><MessageSquare size={14} className="text-teal-600" /> Clinical notes</span><textarea value={comments} onChange={(event) => setComments(event.target.value)} rows={4} className="w-full resize-y rounded-xl border border-line px-3 py-3 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-50" placeholder="Add context for the care team…" /></label>{error && <div className="mt-4 flex items-start gap-2 rounded-xl bg-rose-50 p-3 text-xs leading-5 text-rose-800"><AlertTriangle size={15} className="mt-0.5" />{error}</div>}{saved && <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-xs font-semibold text-emerald-800"><Check size={15} />{saved}</div>}<button onClick={onSave} disabled={saving} className="btn-primary mt-5 w-full sm:w-auto">{saving ? <LoaderCircle size={15} className="animate-spin" /> : <ClipboardCheck size={15} />} {saving ? 'Saving decision…' : 'Save final decision'}</button></div></div>;
+/* =========================================================
+   REVIEW QUEUE
+========================================================= */
+
+function ReviewQueue({
+  queue,
+  selectedId,
+  onSelect,
+}: {
+  queue: ReviewQueueItem[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <aside className="review-queue">
+
+      <div className="queue-header">
+        <div>
+          <div className="queue-label">
+            ACTIVE WORKLIST
+          </div>
+
+          <h2>Cases for review</h2>
+        </div>
+
+        <span className="queue-count">
+          {queue.filter(
+            (item) => item.status === 'open'
+          ).length}
+        </span>
+      </div>
+
+      {queue.length === 0 ? (
+        <div className="queue-empty">
+          <div className="queue-empty-icon">
+            <Check size={22} />
+          </div>
+
+          <strong>Queue is clear</strong>
+
+          <span>
+            No completed screening currently requires
+            clinician review.
+          </span>
+        </div>
+      ) : (
+        <div className="queue-list">
+
+          {queue.map((item, index) => {
+            const selected =
+              selectedId === item.session_id;
+
+            const urgent =
+              item.referable_dr ||
+              item.trust_category === 'UNRELIABLE';
+
+            return (
+              <button
+                key={item.session_id}
+                onClick={() =>
+                  onSelect(item.session_id)
+                }
+                className={`queue-item ${
+                  selected ? 'selected' : ''
+                }`}
+                style={{
+                  animationDelay: `${index * 70}ms`,
+                }}
+              >
+
+                <div className="queue-item-top">
+
+                  <div
+                    className={`case-icon ${
+                      urgent ? 'urgent' : ''
+                    }`}
+                  >
+                    <ScanEye size={16} />
+                  </div>
+
+                  <div className="case-meta">
+                    <strong>
+                      {shortId(item.session_id)}
+                    </strong>
+
+                    <span>
+                      {shortId(item.patient_id)} ·{' '}
+                      {item.eye.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <ChevronRight
+                    size={15}
+                    className="queue-arrow"
+                  />
+                </div>
+
+                <div className="queue-item-reason">
+                  {item.reason}
+                </div>
+
+                <div className="queue-item-bottom">
+
+                  <span
+                    className={
+                      item.referable_dr
+                        ? 'referable-text'
+                        : ''
+                    }
+                  >
+                    {item.predicted_grade_label ??
+                      'No AI grade'}
+                  </span>
+
+                  {item.referable_dr && (
+                    <span className="referable-pill">
+                      REFERABLE
+                    </span>
+                  )}
+
+                </div>
+
+                <div className="queue-status">
+                  <StatusBadge
+                    tone={
+                      item.trust_category ===
+                      'UNRELIABLE'
+                        ? 'danger'
+                        : item.status ===
+                          'reviewed'
+                        ? 'success'
+                        : 'warning'
+                    }
+                  >
+                    {item.status === 'reviewed'
+                      ? 'Reviewed'
+                      : item.trust_category ??
+                        'Review'}
+                  </StatusBadge>
+                </div>
+
+              </button>
+            );
+          })}
+
+        </div>
+      )}
+    </aside>
+  );
 }
 
-function Info({ label, value }: { label: string; value: string }) { return <div className="rounded-xl bg-mist p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p><p className="mt-1 truncate text-xs font-extrabold text-ink">{value}</p></div>; }
-function shortId(value: string) { return value.length > 12 ? `…${value.slice(-8)}` : value; }
+
+/* =========================================================
+   DETAIL
+========================================================= */
+
+function ReviewDetail({
+  item,
+  run,
+  decision,
+  setDecision,
+  modifiedGrade,
+  setModifiedGrade,
+  comments,
+  setComments,
+  saving,
+  saved,
+  error,
+  onSave,
+}: {
+  item: ReviewQueueItem;
+  run: ScreeningRun;
+  decision: ReviewDecision;
+  setDecision: (value: ReviewDecision) => void;
+  modifiedGrade: string;
+  setModifiedGrade: (value: string) => void;
+  comments: string;
+  setComments: (value: string) => void;
+  saving: boolean;
+  saved: string;
+  error: string;
+  onSave: () => void;
+}) {
+  const [overlay, setOverlay] = useState(true);
+
+  const classification = run.classification;
+  const trust = run.retinaguard;
+
+  const heatmap =
+    run.explainability?.grad_cam
+      ?.overlay_data_uri;
+
+  const lesion =
+    run.explainability
+      ?.lesion_evidence_map_data_uri;
+
+  const confidence = classification
+    ? Math.round(
+        classification.raw_confidence * 100
+      )
+    : 0;
+
+  const trustScore = trust
+    ? Math.round(trust.trust_score * 100)
+    : 0;
+
+  return (
+    <div className="detail-stack">
+
+      {/* CASE BAR */}
+
+      <section className="case-bar glass-panel">
+
+        <div className="case-bar-left">
+
+          <div className="case-badge">
+            <ScanEye size={17} />
+          </div>
+
+          <div>
+            <span>SCREENING CASE</span>
+
+            <h2>
+              {shortId(item.session_id)}
+            </h2>
+          </div>
+
+          <div className="case-divider" />
+
+          <div className="case-info">
+            <span>PATIENT</span>
+            <strong>
+              {shortId(item.patient_id)}
+            </strong>
+          </div>
+
+          <div className="case-info">
+            <span>EYE</span>
+            <strong>
+              {item.eye.toUpperCase()}
+            </strong>
+          </div>
+
+        </div>
+
+        <div className="case-live">
+          <span className="pulse-dot" />
+          LIVE REVIEW
+        </div>
+
+      </section>
+
+
+      {/* ANALYSIS GRID */}
+
+      <section className="analysis-grid">
+
+        {/* IMAGE */}
+
+        <div className="retina-panel glass-panel">
+
+          <div className="panel-heading">
+
+            <div>
+              <span className="panel-kicker">
+                RETINAL ANALYSIS
+              </span>
+
+              <h3>Evidence viewer</h3>
+            </div>
+
+            <div className="evidence-toggle">
+              <button
+                onClick={() =>
+                  setOverlay(false)
+                }
+                className={
+                  !overlay ? 'active' : ''
+                }
+              >
+                Original
+              </button>
+
+              <button
+                onClick={() =>
+                  setOverlay(true)
+                }
+                className={
+                  overlay ? 'active' : ''
+                }
+              >
+                <Sparkles size={13} />
+                Evidence
+              </button>
+            </div>
+
+          </div>
+
+          <div className="retina-viewer">
+
+            <div className="scan-line" />
+
+            <img
+              src={imageContentUrl(
+                item.image_id
+              )}
+              alt="Fundus image for clinical review"
+              className="retina-image"
+            />
+
+            {overlay && heatmap && (
+              <img
+                src={heatmap}
+                alt="Grad-CAM evidence overlay"
+                className="retina-overlay heatmap"
+              />
+            )}
+
+            {overlay && lesion && (
+              <img
+                src={lesion}
+                alt="Lesion evidence overlay"
+                className="retina-overlay lesion"
+              />
+            )}
+
+            <div className="viewer-top-left">
+              <Eye size={13} />
+              {overlay
+                ? 'AI EVIDENCE ACTIVE'
+                : 'ORIGINAL IMAGE'}
+            </div>
+
+            <div className="viewer-bottom">
+
+              <div>
+                <span>IMAGE ID</span>
+                <strong>
+                  {shortId(item.image_id)}
+                </strong>
+              </div>
+
+              <div>
+                <span>VIEW</span>
+                <strong>
+                  {item.eye.toUpperCase()}
+                </strong>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="evidence-legend">
+
+            <div>
+              <span className="legend-dot heat" />
+              Grad-CAM attention
+            </div>
+
+            <div>
+              <span className="legend-dot lesion" />
+              Lesion evidence
+            </div>
+
+            <span className="legend-note">
+              Evidence is supportive, not diagnostic.
+            </span>
+
+          </div>
+
+        </div>
+
+
+        {/* AI INSIGHT */}
+
+        <aside className="insight-panel glass-panel">
+
+          <div className="panel-heading">
+            <div>
+              <span className="panel-kicker">
+                AI INSIGHT
+              </span>
+
+              <h3>Model assessment</h3>
+            </div>
+
+            <div className="ai-chip">
+              <Zap size={13} />
+              AI
+            </div>
+          </div>
+
+          <div className="ai-result">
+
+            <span>AI RECOMMENDATION</span>
+
+            <h2>
+              {classification?.predicted_grade_label ??
+                'No grade returned'}
+            </h2>
+
+            <div
+              className={`result-state ${
+                classification?.referable_dr
+                  ? 'danger'
+                  : 'safe'
+              }`}
+            >
+              <span />
+              {classification?.referable_dr
+                ? 'Referable signal detected'
+                : 'No referable DR detected'}
+            </div>
+
+          </div>
+
+          <ScoreMeter
+            label="Model confidence"
+            value={confidence}
+            suffix="%"
+          />
+
+          <ScoreMeter
+            label="RetinaGuard trust"
+            value={trustScore}
+            suffix="/100"
+          />
+
+          <div className="insight-grid">
+
+            <InsightStat
+              label="AI grade"
+              value={
+                classification?.predicted_grade_label ??
+                '—'
+              }
+            />
+
+            <InsightStat
+              label="Referable DR"
+              value={
+                classification
+                  ? classification.referable_dr
+                    ? 'YES'
+                    : 'NO'
+                  : '—'
+              }
+              danger={
+                classification?.referable_dr
+              }
+            />
+
+          </div>
+
+          <div className="model-disclaimer">
+            <ShieldCheck size={15} />
+
+            <p>
+              AI output is a recommendation only.
+              Final clinical interpretation remains
+              with the reviewing clinician.
+            </p>
+          </div>
+
+        </aside>
+
+      </section>
+
+
+      {/* TRUST FACTORS */}
+
+      <section className="trust-panel glass-panel">
+
+        <div className="panel-heading">
+
+          <div>
+            <span className="panel-kicker">
+              MODEL RELIABILITY
+            </span>
+
+            <h3>Trust factors</h3>
+          </div>
+
+          <div className="trust-score">
+            <ShieldCheck size={15} />
+            {trustScore}/100
+          </div>
+
+        </div>
+
+        <div className="trust-grid">
+
+          {(trust?.contributing_factors ?? [])
+            .slice(0, 6)
+            .map((factor) => {
+
+              const score =
+                Math.round(
+                  factor.score * 100
+                );
+
+              return (
+                <div
+                  key={factor.factor}
+                  className="trust-factor"
+                >
+
+                  <div className="trust-factor-top">
+
+                    <span>
+                      {factor.factor.replaceAll(
+                        '_',
+                        ' '
+                      )}
+                    </span>
+
+                    <strong>
+                      {factor.raw_value == null
+                        ? 'N/A'
+                        : `${score}%`}
+                    </strong>
+
+                  </div>
+
+                  <div className="mini-bar">
+                    <span
+                      style={{
+                        width:
+                          factor.raw_value ==
+                          null
+                            ? '0%'
+                            : `${score}%`,
+                      }}
+                    />
+                  </div>
+
+                </div>
+              );
+            })}
+
+        </div>
+
+      </section>
+
+
+      {/* DECISION */}
+
+      <section className="decision-panel glass-panel">
+
+        <div className="decision-heading">
+
+          <div className="decision-icon">
+            <UserRound size={19} />
+          </div>
+
+          <div>
+            <span className="panel-kicker">
+              HUMAN OVERSIGHT
+            </span>
+
+            <h3>Final clinical decision</h3>
+
+            <p>
+              Record the care team's interpretation
+              separately from the AI recommendation.
+            </p>
+          </div>
+
+        </div>
+
+
+        {/* DECISION OPTIONS */}
+
+        <div className="decision-options">
+
+          <DecisionButton
+            active={decision === 'approve'}
+            onClick={() =>
+              setDecision('approve')
+            }
+            icon={<Check size={18} />}
+            title="Approve"
+            description="Accept AI recommendation"
+            variant="approve"
+          />
+
+          <DecisionButton
+            active={decision === 'modify'}
+            onClick={() =>
+              setDecision('modify')
+            }
+            icon={<RotateCcw size={18} />}
+            title="Modify grade"
+            description="Override AI grade"
+            variant="modify"
+          />
+
+          <DecisionButton
+            active={
+              decision ===
+              'request_recapture'
+            }
+            onClick={() =>
+              setDecision(
+                'request_recapture'
+              )
+            }
+            icon={<RefreshCw size={18} />}
+            title="Recapture"
+            description="Request new image"
+            variant="recapture"
+          />
+
+          <DecisionButton
+            active={decision === 'reject'}
+            onClick={() =>
+              setDecision('reject')
+            }
+            icon={<X size={18} />}
+            title="Reject"
+            description="Reject AI output"
+            variant="reject"
+          />
+
+        </div>
+
+
+        {/* MODIFIED GRADE */}
+
+        {decision === 'modify' && (
+          <div className="modify-grade">
+
+            <label>
+              Modified DR grade
+            </label>
+
+            <select
+              value={modifiedGrade}
+              onChange={(event) =>
+                setModifiedGrade(
+                  event.target.value
+                )
+              }
+            >
+              <option value="0">
+                0 · No DR
+              </option>
+
+              <option value="1">
+                1 · Mild
+              </option>
+
+              <option value="2">
+                2 · Moderate
+              </option>
+
+              <option value="3">
+                3 · Severe
+              </option>
+
+              <option value="4">
+                4 · Proliferative DR
+              </option>
+            </select>
+
+          </div>
+        )}
+
+
+        {/* NOTES */}
+
+        <div className="clinical-notes">
+
+          <label>
+            <MessageSquare size={15} />
+            Clinical notes
+          </label>
+
+          <textarea
+            value={comments}
+            onChange={(event) =>
+              setComments(
+                event.target.value
+              )
+            }
+            rows={4}
+            placeholder="Add clinical context, observations or rationale for the care team…"
+          />
+
+        </div>
+
+
+        {/* ERROR */}
+
+        {error && (
+          <div className="review-alert error">
+            <AlertTriangle size={16} />
+
+            <span>{error}</span>
+          </div>
+        )}
+
+
+        {/* SUCCESS */}
+
+        {saved && (
+          <div className="review-alert success">
+            <Check size={16} />
+
+            <span>{saved}</span>
+          </div>
+        )}
+
+
+        {/* SAVE */}
+
+        <div className="decision-footer">
+
+          <div className="audit-note">
+            <ShieldCheck size={15} />
+
+            <span>
+              Decision will be added to the audit trail.
+            </span>
+          </div>
+
+          <button
+            onClick={onSave}
+            disabled={saving}
+            className="save-decision"
+          >
+            {saving ? (
+              <LoaderCircle
+                size={16}
+                className="spin"
+              />
+            ) : (
+              <ClipboardCheck size={16} />
+            )}
+
+            {saving
+              ? 'Saving decision…'
+              : 'Save final decision'}
+
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+  );
+}
+
+
+/* =========================================================
+   COMPONENTS
+========================================================= */
+
+function ScoreMeter({
+  label,
+  value,
+  suffix,
+}: {
+  label: string;
+  value: number;
+  suffix: string;
+}) {
+  return (
+    <div className="score-meter">
+
+      <div className="score-top">
+        <span>{label}</span>
+
+        <strong>
+          {value}
+          {suffix}
+        </strong>
+      </div>
+
+      <div className="score-track">
+        <span
+          style={{
+            width: `${Math.max(
+              0,
+              Math.min(value, 100)
+            )}%`,
+          }}
+        />
+      </div>
+
+    </div>
+  );
+}
+
+
+function InsightStat({
+  label,
+  value,
+  danger,
+}: {
+  label: string;
+  value: string;
+  danger?: boolean;
+}) {
+  return (
+    <div className="insight-stat">
+
+      <span>{label}</span>
+
+      <strong
+        className={
+          danger ? 'danger-text' : ''
+        }
+      >
+        {value}
+      </strong>
+
+    </div>
+  );
+}
+
+
+function DecisionButton({
+  active,
+  onClick,
+  icon,
+  title,
+  description,
+  variant,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  variant: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`decision-option ${
+        active ? 'active' : ''
+      } ${variant}`}
+    >
+
+      <div className="decision-option-icon">
+        {icon}
+      </div>
+
+      <div>
+        <strong>{title}</strong>
+        <span>{description}</span>
+      </div>
+
+      {active && (
+        <div className="decision-check">
+          <Check size={12} />
+        </div>
+      )}
+
+    </button>
+  );
+}
+
+
+function shortId(value: string) {
+  return value.length > 12
+    ? `…${value.slice(-8)}`
+    : value;
+}
