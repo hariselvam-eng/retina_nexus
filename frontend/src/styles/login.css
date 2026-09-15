@@ -549,3 +549,77 @@
     transition-duration: .01ms !important;
   }
 }
+/* =========================================================
+   LANDING PAGE BUTTON
+========================================================= */
+
+.login-landing-button {
+  position: absolute;
+  top: 28px;
+  right: 28px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 16px;
+
+  border: 1px solid rgba(11, 119, 112, 0.18);
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.82);
+  color: #0b7770;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow:
+    0 4px 14px rgba(7, 28, 28, 0.06);
+
+  transition:
+    transform 0.25s ease,
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.login-landing-button:hover {
+  transform: translateY(-2px);
+
+  background: rgba(84, 228, 213, 0.10);
+
+  border-color: rgba(11, 119, 112, 0.30);
+
+  box-shadow:
+    0 8px 22px rgba(11, 119, 112, 0.12);
+}
+
+.login-landing-button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.login-landing-button:focus-visible {
+  outline: 3px solid rgba(84, 228, 213, 0.30);
+  outline-offset: 3px;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+  .login-landing-button {
+    top: 18px;
+    right: 18px;
+
+    padding: 9px 13px;
+
+    font-size: 13px;
+  }
+}

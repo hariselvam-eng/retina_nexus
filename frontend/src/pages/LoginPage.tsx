@@ -164,7 +164,15 @@ export function LoginPage() {
                 ))}
 
               </div>
-
+              <button
+                type="button"
+                className="login-landing-button"
+                onClick={() => {
+                  window.location.href = "/";
+                }}
+              >
+                ← Back to Landing Page
+              </button>
               {/* FLOATING AI CARD */}
               <div
                 className="absolute bottom-20 right-12 hidden w-52 rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-xl xl:block opacity-0 animate-[floatIn_1s_1.5s_ease-out_forwards]"
