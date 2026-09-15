@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+
+load_dotenv()
 from contextlib import asynccontextmanager
 from time import perf_counter
 from uuid import uuid4
@@ -8,7 +11,21 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy import inspect
 
-from app.api.routes import analytics, auth, datasets, demo, health, images, models, monitoring, patients, reports, reviews, screening
+from app.api.routes import (
+    analytics,
+    auth,
+    chat,
+    datasets,
+    demo,
+    health,
+    images,
+    models,
+    monitoring,
+    patients,
+    reports,
+    reviews,
+    screening,
+)
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.core.safe_errors import safe_error_message
@@ -190,7 +207,7 @@ app.include_router(monitoring.router, prefix=api_prefix)
 app.include_router(datasets.router, prefix=api_prefix)
 app.include_router(analytics.router, prefix=api_prefix)
 app.include_router(demo.router, prefix=api_prefix)
-
+app.include_router(chat.router, prefix=api_prefix)
 
 @app.get("/", tags=["system"])
 async def root() -> dict[str, str]:

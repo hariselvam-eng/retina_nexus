@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-
 import { Header } from '../components/Header';
 import { Sidebar } from '../components/Sidebar';
-import { ChatBot } from '../components/ChatBot';
+import { ChatBot } from '../components/Chatbot';
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -37,7 +36,7 @@ export function AppLayout() {
         </div>
       </div>
 
-      {/* Global chatbot - available throughout the application */}
+      {/* GLOBAL CHATBOT */}
       <ChatBot />
     </div>
   );
