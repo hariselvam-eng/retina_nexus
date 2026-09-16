@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     environment: str = "development"
     log_level: str = "INFO"
     secret_key: str = ""
-    gemini_api_key: str = ""
+    xai_api_key: str = ""
+    xai_model: str = "grok-4.6"
+    xai_base_url: str = "https://api.x.ai/v1"
     access_token_expire_minutes: int = 60
     cors_origins: list[str] = Field(default=["http://localhost:5173", "http://127.0.0.1:5173"])
     backend_port: int = 8000

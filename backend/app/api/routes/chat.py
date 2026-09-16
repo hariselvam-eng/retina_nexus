@@ -1,13 +1,11 @@
 import os
 
 from dotenv import load_dotenv
-
-load_dotenv()
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from google import genai
-from google.genai import types
+from openai import OpenAI
+
+load_dotenv()
 
 
 router = APIRouter(
@@ -62,57 +60,55 @@ You are specifically designed for the RETINA-NEXUS application.
 """
 
 
-def get_gemini_client():
-    api_key = os.getenv("GEMINI_API_KEY")
+def get_xai_client():
+    api_key = os.getenv("XAI_API_KEY")
 
     if not api_key:
         raise RuntimeError(
-            "GEMINI_API_KEY is not configured."
+            "XAI_API_KEY is not configured."
         )
 
-    return genai.Client(api_key=api_key)
+    return OpenAI(
+        api_key=api_key,
+        base_url=os.getenv(
+            "XAI_BASE_URL",
+            "https://api.x.ai/v1",
+        ),
+    )
 
 
 @router.post("", response_model=ChatResponse)
 async def chat(request: ChatRequest):
 
     model = os.getenv(
-        "GEMINI_MODEL",
-        "gemini-3.6-flash",
+        "XAI_MODEL",
+        "grok-4.6",
     )
 
     try:
-        client = get_gemini_client()
+        client = get_xai_client()
 
-        response = client.models.generate_content(
+        response = client.chat.completions.create(
             model=model,
-            contents=[
-                types.Content(
-                    role="user",
-                    parts=[
-                        types.Part(
-                            text=f"""
-{SYSTEM_PROMPT}
-
-User question:
-
-{request.message}
-"""
-                        )
-                    ],
-                )
+            messages=[
+                {
+                    "role": "system",
+                    "content": SYSTEM_PROMPT,
+                },
+                {
+                    "role": "user",
+                    "content": request.message,
+                },
             ],
-            config=types.GenerateContentConfig(
-                temperature=0.4,
-                max_output_tokens=700,
-            ),
+            temperature=0.4,
+            max_tokens=700,
         )
 
-        answer = response.text
+        answer = response.choices[0].message.content
 
         if not answer:
             raise RuntimeError(
-                "Gemini returned an empty response."
+                "Grok returned an empty response."
             )
 
         return ChatResponse(
@@ -130,6 +126,6 @@ User question:
             status_code=502,
             detail={
                 "message": "The AI assistant is temporarily unavailable.",
-                "code": "GEMINI_REQUEST_FAILED",
+                "code": "XAI_REQUEST_FAILED",
             },
         )
